@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">GithubApi</string>
+    <string name="internet">Failed Connect</string>
+    <string name="name">UserName</string>
+    <string name="githublink">GitHubLink</string>
+    <string name="SearchGitHubUser">Search</string>
+    <string name="title_error">Octocat</string>
+    <string name="message_error">Search Github Users</string>
+</resources>
