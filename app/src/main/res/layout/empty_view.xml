@@ -17,23 +17,10 @@
         android:layout_height="100dp" />
 
     <TextView
-        android:id="@+id/errorTitle"
-        android:text="@string/title_error"
-        android:textSize="17dp"
-        android:textStyle="bold"
-        android:fontFamily="sans-serif-light"
-        android:textColor="#111111"
-        android:layout_below="@id/errorImage"
-        android:layout_centerHorizontal="true"
-        android:gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
         android:id="@+id/errorMessage"
         android:text="@string/message_error"
         android:fontFamily="sans-serif-light"
-        android:layout_below="@id/errorTitle"
+        android:layout_below="@id/errorImage"
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
         android:layout_width="wrap_content"

@@ -40,10 +40,9 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     TextView Disconnected;
-    private List<Item> users;
     private RelativeLayout emptyView;
-    private TextView errorTitle, errorMessage;
-    private ItemAdapter adapter;
+    private TextView errorMessage;
+
 
     ProgressDialog pd;
     private SwipeRefreshLayout swipeContainer;
@@ -52,12 +51,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         initViews();
 
         swipeContainer = findViewById(R.id.swipeContainer);
 
-        //ConfigureRefreshingColour
+        //ConfigureRefreshing
         swipeContainer.setOnRefreshListener(() -> {
             loadJson();
             Toast.makeText(MainActivity.this, "Github User Refreshed", Toast.LENGTH_SHORT).show();
@@ -88,12 +86,18 @@ public class MainActivity extends AppCompatActivity {
             call.enqueue(new Callback<List<Item>>() {
                 @Override
                 public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
-                    List<Item> items = response.body();
-                    recyclerView.setAdapter(new ItemAdapter(items, getApplicationContext()));
-                    recyclerView.smoothScrollToPosition(0);
-                    swipeContainer.setRefreshing(false);
-                    Disconnected.setVisibility(View.INVISIBLE);
-                    pd.hide();
+                    try {
+                        List<Item> items = response.body();
+                        recyclerView.setAdapter(new ItemAdapter(items, getApplicationContext()));
+                        recyclerView.smoothScrollToPosition(0);
+                        swipeContainer.setRefreshing(false);
+                        Disconnected.setVisibility(View.INVISIBLE);
+                        pd.hide();
+                    } catch (Exception e) {
+                        Log.d("Failed Load Data", Objects.requireNonNull(e.getMessage()));
+                        Toast.makeText(MainActivity.this, "Failed Load Data ", Toast.LENGTH_SHORT).show();
+                    }
+
                 }
 
                 @Override
@@ -111,37 +115,43 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @NonNull
     private void searchJson(final String keyword) {
         Disconnected = findViewById(R.id.disconnected);
         //Try Hit Service
         try {
-            Client client = new Client();
+            new Client();
             Service apiService = Client.build().create(Service.class);
             Call<Users> call = apiService.getSearchUser(keyword);
-
             call.enqueue(new Callback<Users>() {
                 @Override
-                public void onResponse(Call<Users> call, Response<Users> response) {
-                    userList(response.body().getItems());
-                    List<Item> users = response.body().getItems();
-                    int totalCount = response.body().getTotalCount();
-                    if (!response.isSuccessful() || response.body().getItems() == null || totalCount == 0) {
-                        userListFailure("No Result for '" + keyword + "'", "Try Searching for Other Users");
-                    }else {
-                        recyclerView.setAdapter(new ItemAdapter(users, getApplicationContext()));
-                        recyclerView.smoothScrollToPosition(0);
-                        swipeContainer.setRefreshing(false);
-                        Disconnected.setVisibility(View.INVISIBLE);
-                        pd.hide();
+                public void onResponse(@NonNull Call<Users> call, @NonNull Response<Users> response) {
+                    try {
+                        List<Item> users = response.body().getItems();
+                        int totalCount = response.body().getTotalCount();
+                        if (!response.isSuccessful() || response.body().getItems() == null || totalCount == 0) {
+                            userListFailure("No Result for '" + keyword + "'", "Try Searching for Other Users");
+                        } else {
+                            recyclerView.setAdapter(new ItemAdapter(users, getApplicationContext()));
+                            recyclerView.smoothScrollToPosition(0);
+                            swipeContainer.setRefreshing(false);
+                            Disconnected.setVisibility(View.INVISIBLE);
+                            pd.hide();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "Failed While Searching , Please Close Application " +
+                                        "and Try Again. "
+                                , Toast.LENGTH_LONG).show();
+                        Log.d("Error Response Search", e.getMessage());
                     }
                 }
 
                 @Override
                 public void onFailure(Call<Users> call, Throwable t) {
-                    Log.d("Error", Objects.requireNonNull(t.getMessage()));
-                    Toast.makeText(MainActivity.this, "Error Find "+keyword, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Error Find " + keyword, Toast.LENGTH_SHORT).show();
                     Disconnected.setVisibility(View.VISIBLE);
                     pd.hide();
+                    Log.d("Error", Objects.requireNonNull(t.getMessage()));
                 }
             });
 
@@ -198,24 +208,14 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    public void userList(List<Item> items) {
-        if (users != null){
-            users.clear();
-        }
-        users = items;
-        adapter = new ItemAdapter(users, this);
-        recyclerView.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-    }
-
-
     public void userListFailure(String errorMessage, String keyword) {
-        errorView(View.VISIBLE,  errorMessage, keyword);
+        errorView(View.VISIBLE, errorMessage, keyword);
     }
 
     private void errorView(int visibility, String title, String message) {
+        emptyView = findViewById(R.id.empty_view);
+        errorMessage = findViewById(R.id.errorMessage);
         emptyView.setVisibility(visibility);
-        errorTitle.setText(title);
         errorMessage.setText(message);
     }
 
