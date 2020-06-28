@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -36,12 +37,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Created by PwS
+ */
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     TextView Disconnected;
     private RelativeLayout emptyView;
-    private TextView errorMessage;
+    private TextView errorTitle, errorMessage;
+    private ProgressBar progressBar;
+
+
 
 
     ProgressDialog pd;
@@ -60,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
             loadJson();
             Toast.makeText(MainActivity.this, "Github User Refreshed", Toast.LENGTH_SHORT).show();
         });
+
     }
 
     //First Method while Trying connect api
@@ -77,20 +85,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadJson() {
         Disconnected = findViewById(R.id.disconnected);
+        progressBar = findViewById(R.id.progressBar);
         //Try Hit Service
         try {
-            Client client = new Client();
+            new Client();
             Service apiService = Client.build().create(Service.class);
             Call<List<Item>> call = apiService.getItems();
 
             call.enqueue(new Callback<List<Item>>() {
                 @Override
-                public void onResponse(Call<List<Item>> call, Response<List<Item>> response) {
+                public void onResponse(@NonNull Call<List<Item>> call, @NonNull Response<List<Item>> response) {
                     try {
                         List<Item> items = response.body();
                         recyclerView.setAdapter(new ItemAdapter(items, getApplicationContext()));
                         recyclerView.smoothScrollToPosition(0);
                         swipeContainer.setRefreshing(false);
+                        progressBar.setVisibility(View.INVISIBLE);
                         Disconnected.setVisibility(View.INVISIBLE);
                         pd.hide();
                     } catch (Exception e) {
@@ -101,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(Call<List<Item>> call, Throwable t) {
+                public void onFailure(@NonNull Call<List<Item>> call, @NonNull Throwable t) {
                     Log.d("Error", Objects.requireNonNull(t.getMessage()));
                     Toast.makeText(MainActivity.this, "Error Fetching Data", Toast.LENGTH_SHORT).show();
                     Disconnected.setVisibility(View.VISIBLE);
@@ -115,14 +125,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @NonNull
-    private void searchJson(final String keyword) {
+    private void searchJson(final String keyword,int perPage) {
         Disconnected = findViewById(R.id.disconnected);
+        progressBar = findViewById(R.id.progressBar);
         //Try Hit Service
         try {
             new Client();
             Service apiService = Client.build().create(Service.class);
-            Call<Users> call = apiService.getSearchUser(keyword);
+            Call<Users> call = apiService.getSearchUser(keyword,perPage);
             call.enqueue(new Callback<Users>() {
                 @Override
                 public void onResponse(@NonNull Call<Users> call, @NonNull Response<Users> response) {
@@ -136,18 +146,19 @@ public class MainActivity extends AppCompatActivity {
                             recyclerView.smoothScrollToPosition(0);
                             swipeContainer.setRefreshing(false);
                             Disconnected.setVisibility(View.INVISIBLE);
+                            progressBar.setVisibility(View.VISIBLE);
                             pd.hide();
                         }
                     } catch (Exception e) {
                         Toast.makeText(MainActivity.this, "Failed While Searching , Please Close Application " +
                                         "and Try Again. "
                                 , Toast.LENGTH_LONG).show();
-                        Log.d("Error Response Search", e.getMessage());
+                        Log.d("Error Response Search", Objects.requireNonNull(e.getMessage()));
                     }
                 }
 
                 @Override
-                public void onFailure(Call<Users> call, Throwable t) {
+                public void onFailure(@NonNull Call<Users> call, @NonNull Throwable t) {
                     Toast.makeText(MainActivity.this, "Error Find " + keyword, Toast.LENGTH_SHORT).show();
                     Disconnected.setVisibility(View.VISIBLE);
                     pd.hide();
@@ -160,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
@@ -194,7 +206,10 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchJson(query);
+                int perPage=100;
+                searchJson(query,perPage);
+                Toast.makeText(MainActivity.this, "Display Top 100 Data"
+                        , Toast.LENGTH_LONG).show();
                 return false;
             }
 
@@ -208,17 +223,34 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    public void userListFailure(String errorMessage, String keyword) {
+
+   /* private void observeEndlessScrolling() {
+        scrollListener = new EndlessRecyclerViewScrollListener(layoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                if (Utilities.isNetworkConnected(MainActivity.this)) {
+                    viewModel.fetchMoreImages(binding.svImageKey.getQuery().toString(), page);
+                } else {
+                    showToast(MainActivity.this, getString(R.string.internet_error));
+                }
+            }
+        };
+        binding.rvImage.addOnScrollListener(scrollListener);
+    }*/
+
+
+    public void userListFailure(@NonNull String errorMessage, @NonNull String keyword) {
         errorView(View.VISIBLE, errorMessage, keyword);
     }
 
     private void errorView(int visibility, String title, String message) {
         emptyView = findViewById(R.id.empty_view);
-        errorMessage = findViewById(R.id.errorMessage);
         emptyView.setVisibility(visibility);
+        errorTitle = findViewById(R.id.errorTitle);
+        errorTitle.setText(title);
+        errorMessage = findViewById(R.id.errorMessage);
         errorMessage.setText(message);
     }
-
 
     //Back
     @Override

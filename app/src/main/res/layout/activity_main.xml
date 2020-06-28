@@ -25,17 +25,23 @@
                 android:id="@+id/disconnected"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="50dp"
                 android:text="@string/internet"
                 android:textSize="30sp"
-                android:paddingTop="50dp"
                 android:textStyle="bold"
-                android:gravity="center"
-                android:visibility="invisible"/>
+                android:visibility="invisible" />
 
-            <include
-                layout="@layout/empty_view" />
+            <include layout="@layout/empty_view" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"></ProgressBar>
 
         </LinearLayout>
+
+
     </androidx.core.widget.NestedScrollView>
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
