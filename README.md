@@ -6,7 +6,6 @@
 ```bash
 		[✚] Avatar
 		[✚] Username
-		[✚] Name
 		[✚] GitHub Profile Link
 ```
 - [✓] Search By User
